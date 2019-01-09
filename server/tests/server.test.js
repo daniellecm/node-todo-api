@@ -11,7 +11,9 @@ const todos = [{
     text: "First todo"
 }, {
     _id: new ObjectID(),
-    text: "Second todo"
+    text: "Second todo",
+    completed: true,
+    completedAt: 123
 }]
 
 //Clear collection before each test
@@ -125,6 +127,42 @@ describe('DELETE /todos/:id', () => {
     it('should return 400 if object id is invalid', (done) => {
         request(app).delete(`/todos/123`)
         .expect(400)
+        .end(done)
+    })
+})
+
+describe('PATCH /todos/:id', () => {
+    it('should update the todo', (done) => {
+        var text = 'First item modified'
+
+        request(app).patch(`/todos/${todos[0]._id.toHexString()}`)
+        .send({ 
+            text,
+            completed : true
+        })
+        .expect(200)
+        .expect((res) => {
+            expect(res.body.todo.text).toBe(text)
+            expect(res.body.todo.completed).toBeTruthy()
+            expect(typeof res.body.todo.completedAt).toBe('number')
+        })
+        .end(done)
+    })
+    
+    it('should clear completedAt when is not completed', (done) => {
+        var text = 'Second item modified'
+
+        request(app).patch(`/todos/${todos[1]._id.toHexString()}`)
+        .send({ 
+            text,
+            completed : false
+        })
+        .expect(200)
+        .expect((res) => {
+            expect(res.body.todo.text).toBe(text)
+            expect(res.body.todo.completed).toBeFalsy()
+            expect(res.body.todo.completedAt).toBeNull()
+        })
         .end(done)
     })
 })
